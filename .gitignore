@@ -1,0 +1,12 @@
+node_modules
+dist
+.tmp
+.sass-cache
+bower_components
+.DS_Store
+.idea
+npm-debug.log
+test/e2e/BrowserStackLocal
+test/e2e/environment.js
+test/e2e/screenshots
+test/karma_report

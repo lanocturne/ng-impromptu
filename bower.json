@@ -1,0 +1,24 @@
+{
+  "name": "ng-impromptu",
+  "version": "0.0.1",
+  "authors": [
+    "Stanislaus <kanye.s@gmail.com>"
+  ],
+  "description": "A directive for jquery-impromptu: http://trentrichardson.com/Impromptu",
+  "main": "ng-impromptu.js",
+  "keywords": [
+    "angular",
+    "impromptu"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery-impromptu": "~6.0.0"
+  }
+}
