@@ -44,56 +44,86 @@
  </div>
  </file>
  </example>
+
+
+ * @example using new trigger
+ <example>
+    <script>
+        // inside controller...
+        $scope.callTriggerFn = function () {
+			$scope.triggerFn();
+		}
+    </script>
+	 <a ng-click="callTriggerFn()">
+		 <i class="fa fa-street-view"></i>
+		 Take the Tour
+	 </a>
+    <impromptu config="impromptu.config" auto="impromptu.isStarted" trigger="triggerFn"></impromptu>
+ </exampel>
  * Created by stan on 3/9/15.
  * Captora.com
  */
 'use strict';
 
 angular.module('ngImpromptu', [])
-    .directive('impromptu', function () {
-        return {
-            restrict: 'E',
-            scope: {
-                config: '=',
-                auto: '='
-            },
-            controller: function ($scope) {
-                $scope.states = [];
-                $scope.config.forEach(function (c, i) {
-                    var state = angular.copy(c);
-                    angular.extend(state, {
-                        focus: 1,
-                        buttons: {Prev: -1, Next: 1},
-                        submit: function (e, v) {
-                            if (v) {
-                                e.preventDefault();
-                                $.prompt.nextState();
-                                return false;
-                            }
-                            $.prompt.close();
-                        }
-                    });
-                    if (i === 0) {
-                        state.buttons = c.buttons || {Cancel: false, Next: true};
-                    }
-                    if (i === $scope.config.length - 1) {
-                        state.buttons = c.buttons || {Back: -1, Exit: 0};
-                        state.submit = function (e, v) {
-                            e.preventDefault();
-                            if (v === 0) {
-                                $.prompt.close();
-                            }
-                            else if (v == -1) {
-                                $.prompt.prevState();
-                            }
-                        };
-                    }
-                    $scope.states.push(state);
-                });
+	.directive('impromptu', function () {
+		return {
+			restrict: 'E',
+			scope: {
+				config: '=',
+				auto: '=',
+				trigger: '=' // new attribute for triggering outside of auto trigger
+			},
+			controller: function ($scope) {
+				$scope.states = [];
+				$scope.config.forEach(function (c, i) {
+					var state = angular.copy(c);
+					angular.extend(state, {
+						focus: 1,
+						buttons: {Prev: -1, Next: 1},
+						submit: function (e, v) {
+							// updated to handle immediately using the prev button
+							e.preventDefault();
+							if (v === 1) {
+								$.prompt.nextState();
+								return false;
+							}
+							else if (v === 0) {
+								$.prompt.close();
+							}
+							else if (v == -1) {
+								$.prompt.prevState();
+							}
+						}
+					});
+					if (i === 0) {
+						state.buttons = c.buttons || {Cancel: false, Next: true};
+					}
+					if (i === $scope.config.length - 1) {
+						state.buttons = c.buttons || {Back: -1, Exit: 0};
+						state.submit = function (e, v) {
+							e.preventDefault();
+							if (v === 0) {
+								$.prompt.close();
+							}
+							else if (v == -1) {
+								$.prompt.prevState();
+							}
+						};
+					}
+					$scope.states.push(state);
+				});
 
-                if ($scope.auto) {
-                    $.prompt($scope.states);
-                }
-            }
-        };
-    });
+				if ($scope.auto) {
+					$.prompt($scope.states);
+				}
+
+				/**
+				 * trigger the prompt manually (as apposed to using auto)
+				 */
+				$scope.trigger = function () {
+					$.prompt($scope.states);
+				}
+			}
+		};
+	});
