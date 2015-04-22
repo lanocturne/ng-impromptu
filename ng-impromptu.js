@@ -33,7 +33,13 @@
                             {
                                 html: '<div class="hbox"><div id="title-text" class="col-md-12">' +
                                 '<span class="main-text">Thanks to <strong>use impromptu</strong></span>' +
-                                '<br><span>( This tutorial is done. )</span><br/><br/><span class="small"><em>desc goes here.</em></span></div></div>'
+                                '<br><span>( This tutorial is done. )</span><br/><br/><span class="small"><em>desc goes here.</em></span></div></div>',
+                                beforeSubmit: function(){
+                                    console.log('beforeSubmit');
+                                },
+                                afterSubmit: function(){
+                                    console.log('afterSubmit');
+                                }
                             }
                         ]
                     };
@@ -44,22 +50,6 @@
  </div>
  </file>
  </example>
-
-
- * @example using new trigger
- <example>
-    <script>
-        // inside controller...
-        $scope.callTriggerFn = function () {
-			$scope.triggerFn();
-		}
-    </script>
-	 <a ng-click="callTriggerFn()">
-		 <i class="fa fa-street-view"></i>
-		 Take the Tour
-	 </a>
-    <impromptu config="impromptu.config" auto="impromptu.isStarted" trigger="triggerFn"></impromptu>
- </exampel>
  * Created by stan on 3/9/15.
  * Captora.com
  */
@@ -72,7 +62,7 @@ angular.module('ngImpromptu', [])
 			scope: {
 				config: '=',
 				auto: '=',
-				trigger: '=' // new attribute for triggering outside of auto trigger
+				trigger: '='
 			},
 			controller: function ($scope) {
 				$scope.states = [];
@@ -82,17 +72,20 @@ angular.module('ngImpromptu', [])
 						focus: 1,
 						buttons: {Prev: -1, Next: 1},
 						submit: function (e, v) {
-							// updated to handle immediately using the prev button
 							e.preventDefault();
+							(c.beforeSubmit || angular.noop)();
 							if (v === 1) {
 								$.prompt.nextState();
+								(c.afterSubmit || angular.noop)();
 								return false;
 							}
 							else if (v === 0) {
 								$.prompt.close();
+								(c.afterSubmit || angular.noop)();
 							}
 							else if (v == -1) {
 								$.prompt.prevState();
+								(c.afterSubmit || angular.noop)();
 							}
 						}
 					});
@@ -103,11 +96,14 @@ angular.module('ngImpromptu', [])
 						state.buttons = c.buttons || {Back: -1, Exit: 0};
 						state.submit = function (e, v) {
 							e.preventDefault();
+							(c.beforeSubmit || angular.noop)();
 							if (v === 0) {
 								$.prompt.close();
+								(c.afterSubmit || angular.noop)();
 							}
 							else if (v == -1) {
 								$.prompt.prevState();
+								(c.afterSubmit || angular.noop)();
 							}
 						};
 					}
@@ -118,9 +114,6 @@ angular.module('ngImpromptu', [])
 					$.prompt($scope.states);
 				}
 
-				/**
-				 * trigger the prompt manually (as apposed to using auto)
-				 */
 				$scope.trigger = function () {
 					$.prompt($scope.states);
 				}
