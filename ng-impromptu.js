@@ -33,7 +33,13 @@
                             {
                                 html: '<div class="hbox"><div id="title-text" class="col-md-12">' +
                                 '<span class="main-text">Thanks to <strong>use impromptu</strong></span>' +
-                                '<br><span>( This tutorial is done. )</span><br/><br/><span class="small"><em>desc goes here.</em></span></div></div>'
+                                '<br><span>( This tutorial is done. )</span><br/><br/><span class="small"><em>desc goes here.</em></span></div></div>',
+                                beforeSubmit: function(){
+                                    console.log('beforeSubmit');
+                                },
+                                afterSubmit: function(){
+                                    console.log('afterSubmit');
+                                }
                             }
                         ]
                     };
@@ -50,50 +56,67 @@
 'use strict';
 
 angular.module('ngImpromptu', [])
-    .directive('impromptu', function () {
-        return {
-            restrict: 'E',
-            scope: {
-                config: '=',
-                auto: '='
-            },
-            controller: function ($scope) {
-                $scope.states = [];
-                $scope.config.forEach(function (c, i) {
-                    var state = angular.copy(c);
-                    angular.extend(state, {
-                        focus: 1,
-                        buttons: {Prev: -1, Next: 1},
-                        submit: function (e, v) {
-                            if (v) {
-                                e.preventDefault();
-                                $.prompt.nextState();
-                                return false;
-                            }
-                            $.prompt.close();
-                        }
-                    });
-                    if (i === 0) {
-                        state.buttons = c.buttons || {Cancel: false, Next: true};
-                    }
-                    if (i === $scope.config.length - 1) {
-                        state.buttons = c.buttons || {Back: -1, Exit: 0};
-                        state.submit = function (e, v) {
-                            e.preventDefault();
-                            if (v === 0) {
-                                $.prompt.close();
-                            }
-                            else if (v == -1) {
-                                $.prompt.prevState();
-                            }
-                        };
-                    }
-                    $scope.states.push(state);
-                });
+	.directive('impromptu', function () {
+		return {
+			restrict: 'E',
+			scope: {
+				config: '=',
+				auto: '=',
+				trigger: '='
+			},
+			controller: function ($scope) {
+				$scope.states = [];
+				$scope.config.forEach(function (c, i) {
+					var state = angular.copy(c);
+					angular.extend(state, {
+						focus: 1,
+						buttons: {Prev: -1, Next: 1},
+						submit: function (e, v) {
+							e.preventDefault();
+							(c.beforeSubmit || angular.noop)();
+							if (v === 1) {
+								$.prompt.nextState();
+								(c.afterSubmit || angular.noop)();
+								return false;
+							}
+							else if (v === 0) {
+								$.prompt.close();
+								(c.afterSubmit || angular.noop)();
+							}
+							else if (v == -1) {
+								$.prompt.prevState();
+								(c.afterSubmit || angular.noop)();
+							}
+						}
+					});
+					if (i === 0) {
+						state.buttons = c.buttons || {Cancel: false, Next: true};
+					}
+					if (i === $scope.config.length - 1) {
+						state.buttons = c.buttons || {Back: -1, Exit: 0};
+						state.submit = function (e, v) {
+							e.preventDefault();
+							(c.beforeSubmit || angular.noop)();
+							if (v === 0) {
+								$.prompt.close();
+								(c.afterSubmit || angular.noop)();
+							}
+							else if (v == -1) {
+								$.prompt.prevState();
+								(c.afterSubmit || angular.noop)();
+							}
+						};
+					}
+					$scope.states.push(state);
+				});
 
-                if ($scope.auto) {
-                    $.prompt($scope.states);
-                }
-            }
-        };
-    });
+				if ($scope.auto) {
+					$.prompt($scope.states);
+				}
+
+				$scope.trigger = function () {
+					$.prompt($scope.states);
+				}
+			}
+		};
+	});
